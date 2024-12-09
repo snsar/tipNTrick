@@ -121,6 +121,160 @@ $text = str_replace(' ', '-', $text);
 // SIMPLE ✅
 $text = str_replace(' ', '-', strtolower(trim($string)));
 
+
+// 8. Sử dụng Enums thay vì magic strings/numbers
+// PHỨC TẠP ❌
+function setUserStatus($status) {
+    if ($status === 'active' || $status === 'inactive' || $status === 'pending') {
+        $this->status = $status;
+    }
+}
+
+// ĐƠN GIẢN ✅
+enum UserStatus {
+    case Active;
+    case Inactive;
+    case Pending;
+}
+
+function setUserStatus(UserStatus $status) {
+    $this->status = $status;
+}
+
+// 9. Sử dụng Builder Pattern cho object phức tạp
+// PHỨC TẠP ❌
+$query = new Query();
+$query->table = 'users';
+$query->select = ['id', 'name', 'email'];
+$query->where = ['active' => 1];
+$query->orderBy = 'created_at';
+$query->limit = 10;
+
+// ĐƠN GIẢN ✅
+$query = (new QueryBuilder())
+    ->table('users')
+    ->select(['id', 'name', 'email'])
+    ->where(['active' => 1])
+    ->orderBy('created_at')
+    ->limit(10)
+    ->build();
+
+// 10. Sử dụng Named Arguments cho code dễ đọc hơn
+// PHỨC TẠP ❌
+createUser("John Doe", true, "admin", null, "EN", true);
+
+// ĐƠN GIẢN ✅
+createUser(
+    name: "John Doe",
+    isActive: true,
+    role: "admin",
+    department: null,
+    language: "EN",
+    sendEmail: true
+);
+
+// 11. Sử dụng Collection Methods thay vì logic phức tạp
+// PHỨC TẠP ❌
+$total = 0;
+$count = 0;
+foreach ($orders as $order) {
+    if ($order->status === 'completed') {
+        $total += $order->amount;
+        $count++;
+    }
+}
+$average = $count > 0 ? $total / $count : 0;
+
+// ĐƠN GIẢN ✅
+$completedOrders = collect($orders)
+    ->filter(fn($order) => $order->status === 'completed');
+    
+$average = $completedOrders->average('amount');
+
+// 12. Sử dụng Guard Clauses
+// PHỨC TẠP ❌
+function processOrder($order) {
+    if ($order->isPaid()) {
+        if ($order->hasStock()) {
+            if ($order->isValid()) {
+                // Xử lý đơn hàng
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// ĐƠN GIẢN ✅
+function processOrder($order) {
+    if (!$order->isPaid()) {
+        throw new OrderException("Order is not paid");
+    }
+    
+    if (!$order->hasStock()) {
+        throw new OrderException("Products out of stock");
+    }
+    
+    if (!$order->isValid()) {
+        throw new OrderException("Order is invalid");
+    }
+    
+    // Xử lý đơn hàng
+    return true;
+}
+
+// 13. Sử dụng Null Object Pattern
+// PHỨC TẠP ❌
+function getDiscount($user) {
+    if ($user && $user->membership) {
+        return $user->membership->discount;
+    }
+    return 0;
+}
+
+// ĐƠN GIẢN ✅
+class NullMembership {
+    public function getDiscount() {
+        return 0;
+    }
+}
+
+class User {
+    public function getMembership() {
+        return $this->membership ?? new NullMembership();
+    }
+}
+
+// 14. Sử dụng State Pattern cho logic phức tạp
+// PHỨC TẠP ❌
+class Order {
+    public function process() {
+        if ($this->status === 'new') {
+            // xử lý đơn hàng mới
+        } elseif ($this->status === 'pending') {
+            // xử lý đơn hàng đang chờ
+        } elseif ($this->status === 'completed') {
+            // xử lý đơn hàng hoàn thành
+        }
+    }
+}
+
+// ĐƠN GIẢN ✅
+interface OrderState {
+    public function process(Order $order);
+}
+
+class NewOrderState implements OrderState {
+    public function process(Order $order) {
+        // xử lý đơn hàng mới
+    }
+}
+
+class PendingOrderState implements OrderState {
+    public function process(Order $order) {
+        // xử lý đơn hàng đang chờ
+    }
+}
 ```
 
 Here are the key takeaways for simplifying code:
